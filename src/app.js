@@ -41,6 +41,18 @@ app.get('/webhooks', async (req,res) => {
     }
 })
 
+app.get('/webhooks/:source', async (req,res) => {
+    try{
+        const source_params = req.params.source;
+        const webhooks = await Webhook.find({'source': source_params}).sort({receivedAt: -1});
+        res.json(webhooks);
+    }   
+    catch(err){
+        console.log(err);
+        res.status(500).json({error: 'Failed to fetch webhooks for source'});
+    }
+})
+
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
