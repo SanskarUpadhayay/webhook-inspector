@@ -48,8 +48,28 @@ app.get('/webhooks/:source', async (req,res) => {
         res.json(webhooks);
     }   
     catch(err){
-        console.log(err);
         res.status(500).json({error: 'Failed to fetch webhooks for source'});
+    }
+})
+
+app.delete('/webhooks/:id', async (req,res) => {
+    try{
+        const webhook_id = req.params.id;
+        const is_valid_id = mongoose.isValidObjectId(webhook_id);
+        if(!is_valid_id){
+            res.status(400).json({message: 'Id is not valid'});
+            return;
+        }
+        const result = await Webhook.findByIdAndDelete(webhook_id);
+        if(result){
+            res.json({message: 'Webhook deleted successfully'});
+        }
+        else{
+            res.status(404).json({ message: 'Webhook not found with ID'});
+        }
+    }
+    catch(err){
+        res.status(500).json({error: 'Failed to delete webhook'});
     }
 })
 
