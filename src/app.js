@@ -33,8 +33,20 @@ app.post('/webhook/:source', async (req,res) => {
 
 app.get('/webhooks', async (req,res) => {
     try{
-        const webhooks = await Webhook.find().sort({receivedAt: -1});
-        res.json(webhooks);
+        let { currentPage =1 ,currentLimit =2 } = req.query;
+        currentPage = parseInt(currentPage);
+        currentLimit = parseInt(currentLimit);
+        const offset = (currentPage-1)*currentLimit;
+        const totalCount = await Webhook.countDocuments();
+        const webhooks = await Webhook.find().sort({receivedAt: -1}).skip(offset).limit(currentLimit);
+        res.json(
+            {
+               "data":webhooks,
+               page: currentPage,
+               limit: currentLimit,
+               total: totalCount
+        }
+        );
     }
     catch(err){
         res.status(500).json({error: 'Failed to fetch webhooks'});
@@ -72,6 +84,7 @@ app.delete('/webhooks/:id', async (req,res) => {
         res.status(500).json({error: 'Failed to delete webhook'});
     }
 })
+
 
 const PORT = process.env.PORT || 3000;
 
