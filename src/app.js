@@ -1,6 +1,6 @@
 const express = require('express');
 const mongoose = require('mongoose');
-
+const { rateLimit } = require('express-rate-limit');
 require('dotenv').config();
 
 mongoose.connect(process.env.MONGO_URI)
@@ -8,6 +8,15 @@ mongoose.connect(process.env.MONGO_URI)
 
 
 const app = express();
+
+const limiter = rateLimit({
+    windowMs: 60 * 1000, // 1 minutes
+    limit: 10,
+    standardHeaders: 'draft-8',
+    legacyHeaders: false,
+    ipv6Subnet: 56,
+    handler: (req,res,next,options) => res.status(options.statusCode).send(options.message),
+})
 
 const Webhook = require('./models/Webhook');
 
@@ -17,7 +26,7 @@ app.get('/health', (req,res) => {
     res.json({ status: 'ok'});
 });
 
-app.post('/webhook/:source', async (req,res) => {
+app.post('/webhook/:source', limiter ,async (req,res) => {
     try{
         const webhook = new Webhook({
             source: req.params.source,
